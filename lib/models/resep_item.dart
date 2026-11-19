@@ -46,18 +46,26 @@ class ResepItem {
   };
 
   factory ResepItem.fromJson(Map<String, dynamic> json) => ResepItem(
-    id: json['id'] as String,
-    title: json['title'] as String,
-    ingredients: List<String>.from(json['ingredients'] as List<dynamic>),
-    instructions: List<String>.from(json['instructions'] as List<dynamic>),
-    prepTimeMinutes: json['prepTimeMinutes'] as int,
-    cookTimeMinutes: json['cookTimeMinutes'] as int,
-    servings: json['servings'] as int,
-    difficulty: json['difficulty'] as String,
-    cuisine: json['cuisine'] as String,
-    caloriesPerServing: json['caloriesPerServing'] as int,
-    tags: List<String>.from(json['tags'] as List<dynamic>),
-    imageUrl: json['imageUrl'] as String,
-    rating: (json['rating'] as num).toDouble(),
+    id: (json['id'] ?? '').toString(),
+    title: (json['name'] ?? json['title'] ?? '').toString(),
+    ingredients: List<String>.from(json['ingredients'] as List<dynamic>? ?? []),
+    instructions: List<String>.from(
+      json['instructions'] as List<dynamic>? ?? [],
+    ),
+    prepTimeMinutes: json['prepTimeMinutes'] is num
+        ? (json['prepTimeMinutes'] as num).toInt()
+        : 0,
+    cookTimeMinutes: json['cookTimeMinutes'] is num
+        ? (json['cookTimeMinutes'] as num).toInt()
+        : 0,
+    servings: json['servings'] is num ? (json['servings'] as num).toInt() : 0,
+    difficulty: json['difficulty']?.toString() ?? '',
+    cuisine: json['cuisine']?.toString() ?? '',
+    caloriesPerServing: json['caloriesPerServing'] is num
+        ? (json['caloriesPerServing'] as num).toInt()
+        : 0,
+    tags: List<String>.from(json['tags'] as List<dynamic>? ?? []),
+    imageUrl: (json['imageUrl'] ?? json['image'] ?? '').toString(),
+    rating: json['rating'] is num ? (json['rating'] as num).toDouble() : 0,
   );
 }

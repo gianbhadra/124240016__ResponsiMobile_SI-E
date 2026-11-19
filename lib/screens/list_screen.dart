@@ -102,18 +102,28 @@ class _ListScreenState extends State<ListScreen> {
     bool showRemoveButton = false,
   }) {
     if (recipes.isEmpty) {
-      return const Center(child: Text('Belum ada resep yang tersedia.'));
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(
+            showRemoveButton
+                ? 'Belum ada resep favorit.'
+                : 'Belum ada resep yang tersedia.',
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
     }
 
     return ListView.separated(
-      itemCount: recipes.length,
       padding: const EdgeInsets.all(12),
+      itemCount: recipes.length,
       separatorBuilder: (_, _) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
         final ResepItem recipe = recipes[index];
         return Card(
-          child: ListTile(
-            contentPadding: const EdgeInsets.all(12),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute<void>(
@@ -124,41 +134,66 @@ class _ListScreenState extends State<ListScreen> {
                 ),
               );
             },
-            leading: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                recipe.imageUrl,
-                width: 76,
-                height: 76,
-                fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => _imagePlaceholder(),
-              ),
-            ),
-            trailing: showRemoveButton
-                ? IconButton(
-                    onPressed: () => _removeFavourite(recipe),
-                    icon: const Icon(Icons.delete_outline),
-                    tooltip: 'Hapus dari favorit',
-                  )
-                : null,
-            title: Text(
-              recipe.title,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: Column(
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Asal: ${recipe.cuisine}'),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      const Icon(Icons.star, color: Colors.amber, size: 18),
-                      const SizedBox(width: 4),
-                      Text(recipe.rating.toStringAsFixed(1)),
-                    ],
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      recipe.imageUrl,
+                      width: 92,
+                      height: 92,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => _imagePlaceholder(),
+                    ),
                   ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: SizedBox(
+                      height: 92,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            recipe.title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            recipe.cuisine,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(color: Colors.grey.shade700),
+                          ),
+                          const Spacer(),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.star,
+                                color: Colors.amber,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(recipe.rating.toStringAsFixed(1)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (showRemoveButton)
+                    IconButton(
+                      onPressed: () => _removeFavourite(recipe),
+                      icon: const Icon(Icons.delete_outline),
+                      tooltip: 'Hapus dari favorit',
+                    ),
                 ],
               ),
             ),
@@ -170,15 +205,16 @@ class _ListScreenState extends State<ListScreen> {
 
   Widget _imagePlaceholder() {
     return Container(
-      width: 76,
-      height: 76,
+      width: 92,
+      height: 92,
       color: Colors.grey.shade200,
       alignment: Alignment.center,
       child: const Icon(Icons.broken_image_outlined, color: Colors.grey),
     );
   }
 
-  Widget _buildLoadError() {
+  Widget _buildLoadError(Object error) {
+    final String message = error.toString().replaceFirst('Exception: ', '');
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -187,7 +223,7 @@ class _ListScreenState extends State<ListScreen> {
           children: [
             const Icon(Icons.error_outline, color: Colors.red, size: 40),
             const SizedBox(height: 12),
-            const Text('Data resep gagal dimuat.', textAlign: TextAlign.center),
+            Text(message, textAlign: TextAlign.center),
             const SizedBox(height: 12),
             ElevatedButton(
               onPressed: _retryLoading,
@@ -205,7 +241,10 @@ class _ListScreenState extends State<ListScreen> {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Resepin'),
+          title: const Text(
+            'Resepin',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
           actions: [
             IconButton(
               onPressed: _logout,
@@ -227,7 +266,9 @@ class _ListScreenState extends State<ListScreen> {
               return const Center(child: CircularProgressIndicator());
             }
             if (snapshot.hasError) {
-              return _buildLoadError();
+              return _buildLoadError(
+                snapshot.error ?? StateError('Data resep gagal dimuat.'),
+              );
             }
             final List<ResepItem> recipes =
                 snapshot.data ?? const <ResepItem>[];
